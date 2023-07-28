@@ -65,9 +65,7 @@ function CompactFeedItem({ postId }: { postId: number }) {
   const FONT_SIZE = isSystemTextSize ? 15 / fontScale : 15 + fontModifier;
 
   const linkInfo = getLinkInfo(post.post.url);
-  const showLink =
-    linkInfo.extType === ExtensionType.VIDEO ||
-    linkInfo.extType === ExtensionType.GENERIC;
+  const showLink = linkInfo.extType === ExtensionType.GENERIC;
 
   return (
     <View flex={1} my={0.5}>
@@ -105,7 +103,7 @@ function CompactFeedItem({ postId }: { postId: number }) {
                     fontSize={FONT_SIZE - 1}
                     color={theme.colors.app.textSecondary}
                   >
-                    ({getBaseUrl(linkInfo.link, true)})
+                    ({getBaseUrl(linkInfo.link as string, true)}) {/* TODO: Make LinkButton support promises */}
                   </Text>
                 )}
               </Text>

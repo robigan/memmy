@@ -1,5 +1,5 @@
 export interface MediaProps {
-  source: string;
+  source: Promise<string> | string;
   postId?: number;
   heightOverride?: number;
   widthOverride?: number;

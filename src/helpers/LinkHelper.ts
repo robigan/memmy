@@ -9,27 +9,16 @@ import { writeToLog } from "./LogHelper";
 import store from "../../store";
 import i18n from "../plugins/i18n/i18n";
 import { showToast } from "../slices/toast/toastSlice";
+import {
+  getImageMediaProvider,
+  getVideoMediaProvider,
+} from "./MediaProviders/MediaProvider";
 
-const imageExtensions = [
-  "webp",
-  "png",
-  "avif",
-  "heic",
-  "jpeg",
-  "jpg",
-  "gif",
-  "svg",
-  "ico",
-  "icns",
-  "gifv",
-];
-
-const videoExtensions = ["mp4", "mov", "m4a", "webm", "mkv", "avi"];
 let { accounts } = store.getState();
 
 export interface LinkInfo {
   extType?: ExtensionType;
-  link?: string;
+  link?: Promise<string> | string;
 }
 
 export enum ExtensionType {
@@ -41,30 +30,27 @@ export enum ExtensionType {
 
 export const getLinkInfo = (link?: string): LinkInfo => {
   let type;
+  let url: Promise<string> | string = link;
 
   if (!link) {
     type = ExtensionType.NONE;
   } else {
-    const extension = link.split(".").pop();
+    const imageProvider = getImageMediaProvider(link);
+    const videoProvider = getVideoMediaProvider(link);
 
-    if (imageExtensions.includes(extension)) {
-      const localTest =
-        /(^127\.)|(^192\.168\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^::1$)|(^[fF][cCdD])/;
-
-      if (localTest.test(link)) {
-        type = ExtensionType.GENERIC;
-      } else {
-        type = ExtensionType.IMAGE;
-      }
-    } else if (videoExtensions.includes(extension)) {
+    if (imageProvider) {
+      type = ExtensionType.IMAGE;
+      url = imageProvider.getMediaUrl(link);
+    } else if (videoProvider) {
       type = ExtensionType.VIDEO;
+      url = videoProvider.getMediaUrl(link);
     } else {
       type = ExtensionType.GENERIC;
     }
   }
 
   return {
-    link,
+    link: url,
     extType: type,
   };
 };

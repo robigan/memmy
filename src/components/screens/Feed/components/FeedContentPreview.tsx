@@ -84,7 +84,7 @@ function FeedContentPreview({ post, recycled, setPostRead }: IProps) {
         {showLink && (
           <Box mx={4} mt={2}>
             <LinkButton
-              link={linkInfo.link}
+              link={linkInfo.link as string} // TODO: Make LinkButton support promises
               thumbnail={post.post.thumbnail_url}
             />
           </Box>

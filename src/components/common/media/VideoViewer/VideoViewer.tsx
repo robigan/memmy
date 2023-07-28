@@ -59,6 +59,20 @@ function VideoViewer({
   setPostRead,
   compactMode,
 }: MediaProps) {
+  const [resolvedSource, setResolvedSource] = useState<string>(
+    typeof source === "string" ? source : ""
+  );
+
+  useEffect(() => {
+    if (typeof source === "string") return;
+
+    const resolveSource = async () => {
+      setResolvedSource(await source);
+    };
+
+    resolveSource();
+  }, [source]);
+
   const theme = useTheme();
 
   // @ts-ignore
@@ -204,10 +218,10 @@ function VideoViewer({
 
       // In 200ms we will be ready, so then we will display the accessories
       // Add 50ms to prevent visual bugs
-      setTimeout(() => {
+      setTimeout(async () => {
         runOnUI(toggleAccessories)(true);
         if (video.current !== null) {
-          video.current.playAsync();
+          await video.current.playAsync();
           video.current.presentFullscreenPlayer();
         }
       }, 250);
@@ -244,7 +258,6 @@ function VideoViewer({
         setExpanded(false);
         if (video.current !== null) {
           video.current.stopAsync();
-          video.current.dismissFullscreenPlayer();
         }
       }, 200);
     }
@@ -283,7 +296,9 @@ function VideoViewer({
   const [thumbnail, setThumbnail] = useState<UseThumbnail>(null);
 
   useEffect(() => {
-    useThumbnail(source).then((payload) => {
+    if (!resolvedSource) return;
+
+    useThumbnail(resolvedSource).then((payload) => {
       setThumbnail(payload);
 
       dimensions.updateWithThumbnail(
@@ -295,7 +310,7 @@ function VideoViewer({
         setBlurIntensity((prev) => (prev === 99 ? 100 : 99));
       }
     });
-  }, [source]);
+  }, [resolvedSource]);
 
   // This handles our background color styles
   const backgroundStyle = useAnimatedStyle(() => ({
@@ -342,7 +357,7 @@ function VideoViewer({
           ref={nonViewerRef}
           style={{ opacity: expanded ? 0 : 1 }}
         >
-          <ImageButton src={source}>
+          <ImageButton src={resolvedSource}>
             <FastImage
               style={[
                 {
@@ -401,7 +416,7 @@ function VideoViewer({
                     )}
                   </VStack>
                 </BlurView>
-                {!source.includes(".gif") && (
+                {!resolvedSource.includes(".gif") && (
                   <FastImage
                     source={{ uri: thumbnail?.uri ?? "" }}
                     style={[
@@ -441,7 +456,7 @@ function VideoViewer({
             <Animated.View style={[styles.imageModal, backgroundStyle]}>
               <Animated.View style={[positionStyle]}>
                 <AnimatedVideo
-                  source={{ uri: source }}
+                  source={{ uri: resolvedSource }}
                   style={[dimensionsStyle]}
                   ref={video}
                   resizeMode={ResizeMode.CONTAIN}
@@ -466,7 +481,7 @@ function VideoViewer({
           </GestureDetector>
         </View>
         <Animated.View style={[accessoriesStyle]}>
-          <VideoViewFooter source={source} />
+          <VideoViewFooter source={resolvedSource} />
         </Animated.View>
       </Modal>
     </View>
